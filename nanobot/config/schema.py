@@ -17,7 +17,7 @@ class TelegramConfig(BaseModel):
     enabled: bool = False
     token: str = ""  # Bot token from @BotFather
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
-    timeout: int = 120  # HTTP timeout in seconds (increased for thinking models)
+    timeout: int = 1200  # HTTP timeout in seconds (increased for thinking models)
 
 
 class ChannelsConfig(BaseModel):
