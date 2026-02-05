@@ -18,12 +18,24 @@ class TelegramConfig(BaseModel):
     token: str = ""  # Bot token from @BotFather
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
     timeout: int = 1200  # HTTP timeout in seconds (increased for thinking models)
+    proxy: str | None = None  # HTTP/SOCKS5 proxy URL, e.g. "http://127.0.0.1:7890" or "socks5://127.0.0.1:1080"
+
+
+class FeishuConfig(BaseModel):
+    """Feishu/Lark channel configuration using WebSocket long connection."""
+    enabled: bool = False
+    app_id: str = ""  # App ID from Feishu Open Platform
+    app_secret: str = ""  # App Secret from Feishu Open Platform
+    encrypt_key: str = ""  # Encrypt Key for event subscription (optional)
+    verification_token: str = ""  # Verification Token for event subscription (optional)
+    allow_from: list[str] = Field(default_factory=list)  # Allowed user open_ids
 
 
 class ChannelsConfig(BaseModel):
     """Configuration for chat channels."""
     whatsapp: WhatsAppConfig = Field(default_factory=WhatsAppConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
+    feishu: FeishuConfig = Field(default_factory=FeishuConfig)
 
 
 class AgentDefaults(BaseModel):
@@ -52,6 +64,7 @@ class ProvidersConfig(BaseModel):
     anthropic: ProviderConfig = Field(default_factory=ProviderConfig)
     openai: ProviderConfig = Field(default_factory=ProviderConfig)
     openrouter: ProviderConfig = Field(default_factory=ProviderConfig)
+    deepseek: ProviderConfig = Field(default_factory=ProviderConfig)
     groq: ProviderConfig = Field(default_factory=ProviderConfig)
     zhipu: ProviderConfig = Field(default_factory=ProviderConfig)
     vllm: ProviderConfig = Field(default_factory=ProviderConfig)
@@ -111,13 +124,17 @@ class Config(BaseSettings):
             return self.providers.gemini.api_key
         if ("zhipu" in model or "glm" in model or "zai" in model) and self.providers.zhipu.api_key:
             return self.providers.zhipu.api_key
+        if "deepseek" in model and self.providers.deepseek.api_key:
+            return self.providers.deepseek.api_key
         if "groq" in model and self.providers.groq.api_key:
             return self.providers.groq.api_key
         if "vllm" in model and self.providers.vllm.api_key:
             return self.providers.vllm.api_key
 
+        # Fallback to priority order
         return (
             self.providers.openrouter.api_key or
+            self.providers.deepseek.api_key or
             self.providers.anthropic.api_key or
             self.providers.openai.api_key or
             self.providers.gemini.api_key or
