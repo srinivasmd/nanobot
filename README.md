@@ -170,6 +170,38 @@ nanobot agent -m "Hello from my local LLM!"
 > [!TIP]
 > The `apiKey` can be any non-empty string for local servers that don't require authentication.
 
+## OpenAI SDK Mode
+
+Connect directly to any OpenAI-compatible API endpoint without going through LiteLLM. Suitable for custom model services, local deployments, or other services that are compatible with the OpenAI API format.
+
+**Use Cases:**
+- Use custom endpoints (e.g., `http://localhost:4000`)
+- Use special model names (e.g., `GLM/glm-4.7-thinking-official`)
+- Need direct access to model APIs, skipping LiteLLM's abstraction layer
+
+**Configuration:**
+
+Set in `~/.nanobot/config.json`:
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "provider": "openai",
+      "model": "GLM/glm-4.7-thinking-official"
+    }
+  },
+  "providers": {
+    "openai": {
+      "apiKey": "your-api-key",
+      "apiBase": "http://localhost:4000"
+    }
+  }
+}
+```
+
+Or run `nanobot onboard` and select the **"OpenAI SDK"** option during initialization.
+
 ## 💬 Chat Apps
 
 Talk to your nanobot through Telegram, Discord, WhatsApp, or Feishu — anytime, anywhere.
@@ -356,10 +388,19 @@ Config file: `~/.nanobot/config.json`
 |----------|---------|-------------|
 | `openrouter` | LLM (recommended, access to all models) | [openrouter.ai](https://openrouter.ai) |
 | `anthropic` | LLM (Claude direct) | [console.anthropic.com](https://console.anthropic.com) |
-| `openai` | LLM (GPT direct) | [platform.openai.com](https://platform.openai.com) |
+| `openai` | LLM (GPT direct or **OpenAI-compatible APIs**) | [platform.openai.com](https://platform.openai.com) |
 | `deepseek` | LLM (DeepSeek direct) | [platform.deepseek.com](https://platform.deepseek.com) |
 | `groq` | LLM + **Voice transcription** (Whisper) | [console.groq.com](https://console.groq.com) |
 | `gemini` | LLM (Gemini direct) | [aistudio.google.com](https://aistudio.google.com) |
+
+**Provider Implementation Selection:**
+
+Select the LLM provider implementation in `agents.defaults.provider`:
+
+| Provider | Description |
+|----------|-------------|
+| `litellm` (default) | Access multiple model providers through LiteLLM |
+| `openai` | Directly use OpenAI SDK, supports custom endpoints and model names |
 
 
 ### Security
@@ -371,6 +412,57 @@ Config file: `~/.nanobot/config.json`
 |--------|---------|-------------|
 | `tools.restrictToWorkspace` | `false` | When `true`, restricts **all** agent tools (shell, file read/write/edit, list) to the workspace directory. Prevents path traversal and out-of-scope access. |
 | `channels.*.allowFrom` | `[]` (allow all) | Whitelist of user IDs. Empty = allow everyone; non-empty = only listed users can interact. |
+
+### Full Configuration Example
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "provider": "litellm",
+      "model": "anthropic/claude-opus-4-5"
+    }
+  },
+  "providers": {
+    "openrouter": {
+      "apiKey": "sk-or-v1-xxx"
+    },
+    "openai": {
+      "apiKey": "sk-xxx",
+      "apiBase": "https://api.openai.com/v1"
+    },
+    "groq": {
+      "apiKey": "gsk_xxx"
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "123456:ABC...",
+      "allowFrom": ["123456789"],
+      "timeout": 120
+    },
+    "whatsapp": {
+      "enabled": false
+    },
+    "feishu": {
+      "enabled": false,
+      "appId": "cli_xxx",
+      "appSecret": "xxx",
+      "encryptKey": "",
+      "verificationToken": "",
+      "allowFrom": []
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "apiKey": "BSA..."
+      }
+    }
+  }
+}
+```
 
 
 ## CLI Reference

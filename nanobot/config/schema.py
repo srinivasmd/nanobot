@@ -17,6 +17,7 @@ class TelegramConfig(BaseModel):
     enabled: bool = False
     token: str = ""  # Bot token from @BotFather
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
+    timeout: int = 1200  # HTTP timeout in seconds (increased for thinking models)
     proxy: str | None = None  # HTTP/SOCKS5 proxy URL, e.g. "http://127.0.0.1:7890" or "socks5://127.0.0.1:1080"
 
 
@@ -51,6 +52,7 @@ class AgentDefaults(BaseModel):
     """Default agent configuration."""
     workspace: str = "~/.nanobot/workspace"
     model: str = "anthropic/claude-opus-4-5"
+    provider: str = "litellm"  # Options: "litellm" or "openai"
     max_tokens: int = 8192
     temperature: float = 0.7
     max_tool_iterations: int = 20
@@ -164,7 +166,7 @@ class Config(BaseSettings):
             if provider.api_key:
                 return provider.api_key
         return None
-    
+
     def get_api_base(self, model: str | None = None) -> str | None:
         """Get API base URL based on model name."""
         model = (model or self.agents.defaults.model).lower()
@@ -174,6 +176,7 @@ class Config(BaseSettings):
             return self.providers.zhipu.api_base
         if "vllm" in model:
             return self.providers.vllm.api_base
+
         return None
     
     class Config:
